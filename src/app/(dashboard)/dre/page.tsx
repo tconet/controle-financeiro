@@ -188,6 +188,7 @@ export default function DREPage() {
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{cat.category_name}</span>
                   <span className="text-xs text-gray-400">{cat.expenses.length} lanç.</span>
                 </div>
+
                 <span className="text-right text-sm font-semibold text-red-600 dark:text-red-400">
                   ({formatCurrency(cat.total)})
                 </span>
@@ -208,28 +209,39 @@ export default function DREPage() {
                 )}
               </button>
 
-              {/* Drill-down */}
-              {isExpanded && cat.expenses.map((exp) => {
-                const expName = (exp.expense_names as { name: string } | null)?.name ?? '—'
-                return (
-                  <div
-                    key={exp.id}
-                    className="grid px-6 py-2.5 border-b border-gray-50 dark:border-gray-800/30 bg-gray-50/30 dark:bg-gray-800/10"
-                    style={{ gridTemplateColumns: compareMode ? '1fr 160px 160px' : '1fr 160px' }}
-                  >
-                    <div className="flex items-center gap-3 pl-6">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{expName}</span>
-                      {exp.description && (
-                        <span className="text-xs text-gray-400 truncate">— {exp.description}</span>
-                      )}
+              {/* Drill-down agrupado por despesa/fornecedor */}
+              {isExpanded && (() => {
+                // Agrupar por expense_name_id
+                const grouped = cat.expenses.reduce<Record<string, { name: string; total: number; count: number }>>((acc, exp) => {
+                  const nameId = exp.expense_name_id ?? '__sem_nome__'
+                  const name = (exp.expense_names as { name: string } | null)?.name ?? '(sem despesa)'
+                  if (!acc[nameId]) acc[nameId] = { name, total: 0, count: 0 }
+                  acc[nameId].total += Number(exp.amount)
+                  acc[nameId].count += 1
+                  return acc
+                }, {})
+
+                return Object.entries(grouped)
+                  .sort(([, a], [, b]) => b.total - a.total)
+                  .map(([nameId, group]) => (
+                    <div
+                      key={nameId}
+                      className="grid px-6 py-2.5 border-b border-gray-50 dark:border-gray-800/30 bg-gray-50/30 dark:bg-gray-800/10"
+                      style={{ gridTemplateColumns: compareMode ? '1fr 160px 160px' : '1fr 160px' }}
+                    >
+                      <div className="flex items-center gap-2 pl-6">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{group.name}</span>
+                        {group.count > 1 && (
+                          <span className="text-xs text-gray-400">({group.count}×)</span>
+                        )}
+                      </div>
+                      <span className="text-right text-sm text-gray-600 dark:text-gray-400">
+                        {formatCurrency(group.total)}
+                      </span>
+                      {compareMode && <div />}
                     </div>
-                    <span className="text-right text-sm text-gray-600 dark:text-gray-400">
-                      {formatCurrency(Number(exp.amount))}
-                    </span>
-                    {compareMode && <div />}
-                  </div>
-                )
-              })}
+                  ))
+              })()}
             </div>
           )
         })}

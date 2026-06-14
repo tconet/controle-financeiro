@@ -256,4 +256,69 @@ export default function LancamentosPage() {
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                              <b
+                              <button
+                                onClick={() => setEditExpense(isEditing ? null : exp)}
+                                title="Editar"
+                                className={cn(
+                                  'p-1.5 rounded-lg transition-colors',
+                                  isEditing
+                                    ? 'text-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                                    : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                                )}
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(exp.id)}
+                                title="Excluir"
+                                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ===== Painel direito: formulário sempre visível ===== */}
+        <div className="w-72 shrink-0 overflow-y-auto">
+          <InlineExpenseForm
+            shortcuts={shortcuts}
+            editExpense={editExpense}
+            onSuccess={loadData}
+            onCancelEdit={() => setEditExpense(null)}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReceiptIcon({ className, size }: { className?: string; size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size ?? 24}
+      height={size ?? 24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+      <path d="M14 8H8" />
+      <path d="M16 12H8" />
+      <path d="M13 16H8" />
+    </svg>
+  )
+}

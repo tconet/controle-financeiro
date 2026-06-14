@@ -51,4 +51,12 @@ export function Header({ title, userEmail, userAvatar }: HeaderProps) {
 
         <button
           onClick={handleLogout}
-          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:
+          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          title="Sair"
+        >
+          <LogOut size={18} />
+        </button>
+      </div>
+    </header>
+  )
+}
