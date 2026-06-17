@@ -111,7 +111,7 @@ export default function DashboardPage() {
             {shortcuts.map((s) => (
               <button
                 key={s.id}
-                onClick={() => router.push('/lancamentos')}
+                onClick={() => router.push(`/lancamentos?shortcut=${s.id}`)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-blue-100 dark:hover:border-blue-900 transition-all"
               >
                 <Plus size={14} />

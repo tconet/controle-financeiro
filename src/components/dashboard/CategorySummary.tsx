@@ -46,6 +46,9 @@ export function CategorySummary({ expenses }: CategorySummaryProps) {
                       {formatCurrency(total)}
                     </span>
                     <span className="text-xs text-gray-400 ml-2">
+                      {pct.toFixed(1)}%
+                    </span>
+                    <span className="text-xs text-gray-400 ml-2">
                       {count} lanç.
                     </span>
                   </div>

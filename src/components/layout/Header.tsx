@@ -2,7 +2,7 @@
 
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
-import { Sun, Moon, LogOut } from 'lucide-react'
+import { Sun, Moon, LogOut, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { NotificationBell } from './NotificationBell'
@@ -16,15 +16,22 @@ interface HeaderProps {
 export function Header({ title, userEmail, userAvatar }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [avatarError, setAvatarError] = useState(false)
   const router = useRouter()
 
   useEffect(() => setMounted(true), [])
+
+  // Reset erro se o avatar mudar
+  useEffect(() => setAvatarError(false), [userAvatar])
 
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  const showAvatar = userAvatar && !avatarError
+  const initials = userEmail ? userEmail[0].toUpperCase() : null
 
   return (
     <header className="h-14 flex items-center justify-between px-6 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
@@ -41,12 +48,25 @@ export function Header({ title, userEmail, userAvatar }: HeaderProps) {
           {mounted && (theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />)}
         </button>
 
-        {userAvatar && (
+        {showAvatar ? (
           <img
             src={userAvatar}
             alt={userEmail ?? ''}
-            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700"
+            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 object-cover"
+            onError={() => setAvatarError(true)}
+            referrerPolicy="no-referrer"
           />
+        ) : (
+          <div
+            className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
+            title={userEmail}
+          >
+            {initials ? (
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{initials}</span>
+            ) : (
+              <User size={16} className="text-gray-500" />
+            )}
+          </div>
         )}
 
         <button

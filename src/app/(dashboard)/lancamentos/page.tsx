@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Expense, Category, ExpenseName, Shortcut, ExpenseStatus } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { deleteExpense, updateExpenseStatus } from '@/app/actions/expenses'
@@ -12,6 +13,8 @@ import { Pencil, Trash2, RefreshCw, X } from 'lucide-react'
 
 export default function LancamentosPage() {
   const now = new Date()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | 'todos'>('todos')
@@ -24,6 +27,7 @@ export default function LancamentosPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [expenseNames, setExpenseNames] = useState<ExpenseName[]>([])
   const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
+  const [initialShortcut, setInitialShortcut] = useState<Shortcut | null>(null)
   const [editExpense, setEditExpense] = useState<Expense | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -62,6 +66,18 @@ export default function LancamentosPage() {
   }, [month, year])
 
   useEffect(() => { loadData() }, [loadData])
+
+  // Aplicar atalho vindo do dashboard via query param
+  useEffect(() => {
+    const shortcutId = searchParams.get('shortcut')
+    if (!shortcutId || shortcuts.length === 0) return
+    const found = shortcuts.find((s) => s.id === shortcutId)
+    if (found) {
+      setInitialShortcut(found)
+      // Limpar o param da URL sem recarregar a página
+      router.replace('/lancamentos', { scroll: false })
+    }
+  }, [searchParams, shortcuts, router])
 
   const hasDateFilter = !!(dateFrom || dateTo)
 
@@ -292,6 +308,8 @@ export default function LancamentosPage() {
           <InlineExpenseForm
             shortcuts={shortcuts}
             editExpense={editExpense}
+            initialShortcut={initialShortcut}
+            onInitialShortcutApplied={() => setInitialShortcut(null)}
             onSuccess={loadData}
             onCancelEdit={() => setEditExpense(null)}
           />

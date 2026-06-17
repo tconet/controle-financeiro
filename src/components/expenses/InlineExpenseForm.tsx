@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 interface InlineExpenseFormProps {
   shortcuts?: Shortcut[]
   editExpense?: Expense | null
+  initialShortcut?: Shortcut | null
+  onInitialShortcutApplied?: () => void
   onSuccess: () => void
   onCancelEdit?: () => void
 }
@@ -27,6 +29,8 @@ const EMPTY = {
 export function InlineExpenseForm({
   shortcuts = [],
   editExpense,
+  initialShortcut,
+  onInitialShortcutApplied,
   onSuccess,
   onCancelEdit,
 }: InlineExpenseFormProps) {
@@ -62,6 +66,14 @@ export function InlineExpenseForm({
     }
     loadOptions()
   }, [])
+
+  // Aplicar atalho vindo do dashboard
+  useEffect(() => {
+    if (initialShortcut) {
+      applyShortcut(initialShortcut)
+      onInitialShortcutApplied?.()
+    }
+  }, [initialShortcut]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Quando muda o editExpense, preencher o form
   useEffect(() => {
