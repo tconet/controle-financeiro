@@ -15,14 +15,17 @@ export default function LancamentosPage() {
   const now = new Date()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [month, setMonth] = useState(now.getMonth() + 1)
-  const [year, setYear] = useState(now.getFullYear())
+
+  const paramMonth = searchParams.get('month')
+  const paramYear = searchParams.get('year')
+  const [month, setMonth] = useState(paramMonth ? Number(paramMonth) : now.getMonth() + 1)
+  const [year, setYear] = useState(paramYear ? Number(paramYear) : now.getFullYear())
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | 'todos'>('todos')
-  const [categoryFilter, setCategoryFilter] = useState<string>('todos')
+  const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') ?? 'todos')
   const [expenseNameFilter, setExpenseNameFilter] = useState<string>('todos')
   const today = now.toISOString().split('T')[0]
-  const [dateFrom, setDateFrom] = useState<string>(today)
-  const [dateTo, setDateTo] = useState<string>(today)
+  const [dateFrom, setDateFrom] = useState<string>(searchParams.get('dateFrom') ?? today)
+  const [dateTo, setDateTo] = useState<string>(searchParams.get('dateTo') ?? today)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [expenseNames, setExpenseNames] = useState<ExpenseName[]>([])
@@ -78,6 +81,20 @@ export default function LancamentosPage() {
       router.replace('/lancamentos', { scroll: false })
     }
   }, [searchParams, shortcuts, router])
+
+  // Limpar params de filtro do dashboard da URL (já foram aplicados no estado inicial)
+  useEffect(() => {
+    if (
+      searchParams.get('category') ||
+      searchParams.get('dateFrom') ||
+      searchParams.get('dateTo') ||
+      searchParams.get('month') ||
+      searchParams.get('year')
+    ) {
+      router.replace('/lancamentos', { scroll: false })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const hasDateFilter = !!(dateFrom || dateTo)
 

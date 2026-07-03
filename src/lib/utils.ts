@@ -1,8 +1,29 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { Expense } from '@/lib/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/** Agrupa lançamentos por fornecedor/despesa, somando valores e ordenando do maior para o menor total. */
+export function groupByExpenseName(expenses: Expense[]) {
+  const grouped = expenses.reduce<Record<string, { name: string; total: number; count: number }>>((acc, exp) => {
+    const nameId = exp.expense_name_id ?? '__sem_nome__'
+    const name = (exp.expense_names as { name: string } | null)?.name ?? '(sem despesa)'
+    if (!acc[nameId]) acc[nameId] = { name, total: 0, count: 0 }
+    acc[nameId].total += Number(exp.amount)
+    acc[nameId].count += 1
+    return acc
+  }, {})
+
+  return Object.entries(grouped).sort(([, a], [, b]) => b.total - a.total)
+}
+
+/** Percentual de `value` sobre `revenue`, formatado como string ("12.34%") ou "—" se revenue for 0. */
+export function pctOf(value: number, revenue: number): string {
+  if (!revenue) return '—'
+  return `${((value / revenue) * 100).toFixed(2)}%`
 }
 
 export function formatCurrency(value: number): string {

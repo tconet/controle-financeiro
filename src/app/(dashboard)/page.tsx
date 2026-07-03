@@ -139,7 +139,16 @@ export default function DashboardPage() {
           />
         </div>
         <div>
-          <CategorySummary expenses={expenses} />
+          <CategorySummary
+            expenses={expenses}
+            onCategoryClick={(categoryId) => {
+              const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+              const endDate = new Date(year, month, 0).toISOString().split('T')[0]
+              router.push(
+                `/lancamentos?category=${categoryId}&dateFrom=${startDate}&dateTo=${endDate}&month=${month}&year=${year}`
+              )
+            }}
+          />
         </div>
       </div>
 

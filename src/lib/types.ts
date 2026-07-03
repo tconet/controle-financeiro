@@ -8,6 +8,7 @@ export interface Category {
   id: string
   user_id: string
   name: string
+  is_inventory: boolean
   created_at: string
 }
 
@@ -75,6 +76,17 @@ export interface Revenue {
   updated_at: string
 }
 
+export interface StockMonthlyInput {
+  id: string
+  user_id: string
+  month: number
+  year: number
+  purchased_amount: number
+  cmv_target_percent: number
+  created_at: string
+  updated_at: string
+}
+
 // ============================================================
 // Tipos de visualização
 // ============================================================
@@ -82,8 +94,20 @@ export interface Revenue {
 export interface DRECategory {
   category_id: string | null
   category_name: string
+  is_inventory: boolean
   total: number
   expenses: Expense[]
+}
+
+// Uma das 3 formas de apurar o resultado considerando o Estoque/CMV
+export interface DREStockResult {
+  label: string
+  /** Valor usado como dedução de estoque nesta forma (pago, comprado ou meta) */
+  deduction: number
+  /** Receita - outras despesas - dedução de estoque desta forma */
+  result: number
+  /** result / revenue * 100 */
+  percentOfRevenue: number
 }
 
 export interface DREData {
@@ -93,6 +117,23 @@ export interface DREData {
   totalExpenses: number
   result: number
   categories: DRECategory[]
+  /** Total de despesas de todas as categorias, exceto a categoria de Estoque */
+  otherExpensesTotal: number
+  inventoryCategoryId: string | null
+  inventoryCategoryName: string | null
+  /** Estoque pago no mês (fluxo de caixa) */
+  stockPaid: number
+  /** Valor comprado no mês, informado manualmente */
+  stockPurchased: number
+  /** Meta % de CMV sobre o faturamento, informada manualmente */
+  cmvTargetPercent: number
+  /** Receita * cmvTargetPercent / 100 */
+  cmvTargetValue: number
+  stockResults: {
+    cashFlow: DREStockResult
+    cmvPurchased: DREStockResult
+    cmvTarget: DREStockResult
+  }
 }
 
 export interface StatusSummary {

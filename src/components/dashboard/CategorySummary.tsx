@@ -1,15 +1,16 @@
 'use client'
 
-import { Expense, Category } from '@/lib/types'
+import { Expense } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 
 interface CategorySummaryProps {
   expenses: Expense[]
+  onCategoryClick?: (categoryId: string) => void
 }
 
-export function CategorySummary({ expenses }: CategorySummaryProps) {
+export function CategorySummary({ expenses, onCategoryClick }: CategorySummaryProps) {
   // Agrupar por categoria (apenas pagos + agendados para dar visão total)
-  const categoryMap = new Map<string, { name: string; total: number; count: number }>()
+  const categoryMap = new Map<string, { id: string; name: string; total: number; count: number }>()
 
   for (const exp of expenses) {
     const key = exp.category_id ?? 'sem-categoria'
@@ -19,7 +20,7 @@ export function CategorySummary({ expenses }: CategorySummaryProps) {
       existing.total += Number(exp.amount)
       existing.count += 1
     } else {
-      categoryMap.set(key, { name, total: Number(exp.amount), count: 1 })
+      categoryMap.set(key, { id: key, name, total: Number(exp.amount), count: 1 })
     }
   }
 
@@ -35,12 +36,18 @@ export function CategorySummary({ expenses }: CategorySummaryProps) {
         <p className="text-sm text-gray-400 py-4 text-center">Nenhum lançamento neste período</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {categories.map(({ name, total, count }) => {
+          {categories.map(({ id, name, total, count }) => {
             const pct = grandTotal > 0 ? (total / grandTotal) * 100 : 0
             return (
-              <div key={name}>
+              <button
+                key={id}
+                onClick={() => onCategoryClick?.(id)}
+                className="text-left w-full group rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 py-1 transition-colors"
+              >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{name}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {name}
+                  </span>
                   <div className="text-right">
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {formatCurrency(total)}
@@ -59,7 +66,7 @@ export function CategorySummary({ expenses }: CategorySummaryProps) {
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>

@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS categories (
   UNIQUE(user_id, name)
 );
 
+-- Marca qual categoria representa o Estoque/CMV no DRE (apenas uma por usuário)
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_inventory BOOLEAN NOT NULL DEFAULT FALSE;
+
 -- Despesas/Fornecedores (nomes livres: Fornecedor X, FGTS, Aluguel, etc.)
 CREATE TABLE IF NOT EXISTS expense_names (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -84,6 +87,19 @@ CREATE TABLE IF NOT EXISTS revenues (
   UNIQUE(user_id, month, year)
 );
 
+-- Dados mensais de Estoque/CMV para o DRE (valor comprado no mês e meta % de CMV)
+CREATE TABLE IF NOT EXISTS stock_monthly_inputs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
+  year INTEGER NOT NULL,
+  purchased_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  cmv_target_percent DECIMAL(5,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE(user_id, month, year)
+);
+
 -- ============================================================
 -- ÍNDICES
 -- ============================================================
@@ -95,6 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON expenses(category_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_user_due ON expenses(user_id, due_date);
 CREATE INDEX IF NOT EXISTS idx_revenues_user_month ON revenues(user_id, year, month);
 CREATE INDEX IF NOT EXISTS idx_recurring_user ON recurring_expenses(user_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_stock_inputs_user_month ON stock_monthly_inputs(user_id, year, month);
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS)
@@ -107,6 +124,7 @@ ALTER TABLE shortcuts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE revenues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_monthly_inputs ENABLE ROW LEVEL SECURITY;
 
 -- Policies para categories
 CREATE POLICY "categories_select" ON categories FOR SELECT USING (auth.uid() = user_id);
@@ -144,6 +162,12 @@ CREATE POLICY "revenues_insert" ON revenues FOR INSERT WITH CHECK (auth.uid() = 
 CREATE POLICY "revenues_update" ON revenues FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "revenues_delete" ON revenues FOR DELETE USING (auth.uid() = user_id);
 
+-- Policies para stock_monthly_inputs
+CREATE POLICY "stock_inputs_select" ON stock_monthly_inputs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "stock_inputs_insert" ON stock_monthly_inputs FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "stock_inputs_update" ON stock_monthly_inputs FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "stock_inputs_delete" ON stock_monthly_inputs FOR DELETE USING (auth.uid() = user_id);
+
 -- ============================================================
 -- FUNÇÃO: Atualizar updated_at automaticamente
 -- ============================================================
@@ -158,4 +182,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER revenues_updated_at
   BEFORE UPDATE ON revenues
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER stock_monthly_inputs_updated_at
+  BEFORE UPDATE ON stock_monthly_inputs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();

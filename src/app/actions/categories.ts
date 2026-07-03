@@ -47,3 +47,31 @@ export async function updateCategory(id: string, name: string): Promise<void> {
   if (error) throw error
   revalidatePath('/')
 }
+
+/**
+ * Marca `id` como a categoria de Estoque/CMV usada no DRE, desmarcando
+ * qualquer outra categoria que estivesse marcada. Passe `null` para
+ * apenas remover a marcação atual.
+ */
+export async function setInventoryCategory(id: string | null): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Não autenticado')
+
+  const { error: clearError } = await supabase
+    .from('categories')
+    .update({ is_inventory: false })
+    .eq('user_id', user.id)
+    .eq('is_inventory', true)
+  if (clearError) throw clearError
+
+  if (id) {
+    const { error } = await supabase
+      .from('categories')
+      .update({ is_inventory: true })
+      .eq('id', id)
+    if (error) throw error
+  }
+
+  revalidatePath('/')
+}
