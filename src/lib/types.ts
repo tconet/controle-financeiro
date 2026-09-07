@@ -25,6 +25,7 @@ export interface Shortcut {
   name: string
   category_id: string | null
   expense_name_id: string | null
+  status: ExpenseStatus | null
   sort_order: number
   created_at: string
   categories?: Category | null

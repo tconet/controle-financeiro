@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Expense } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { DayModal } from './DayModal'
@@ -16,6 +17,7 @@ interface ExpenseCalendarProps {
 }
 
 export function ExpenseCalendar({ month, year, expenses, onUpdate }: ExpenseCalendarProps) {
+  const router = useRouter()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const firstDay = new Date(year, month - 1, 1).getDay()
@@ -65,10 +67,9 @@ export function ExpenseCalendar({ month, year, expenses, onUpdate }: ExpenseCale
           return (
             <button
               key={dateStr}
-              onClick={() => hasExpenses ? setSelectedDate(dateStr) : null}
+              onClick={() => hasExpenses ? setSelectedDate(dateStr) : router.push(`/lancamentos?date=${dateStr}`)}
               className={cn(
-                'aspect-square flex flex-col items-center justify-center rounded-xl text-xs transition-all',
-                hasExpenses ? 'cursor-pointer hover:scale-105' : 'cursor-default',
+                'aspect-square flex flex-col items-center justify-center rounded-xl text-xs transition-all cursor-pointer hover:scale-105',
                 isToday && !hasExpenses && 'ring-2 ring-blue-400 dark:ring-blue-600',
                 hasExpenses && allPaid && 'bg-green-50 dark:bg-green-950/40 border border-green-100 dark:border-green-900/40',
                 hasExpenses && !allPaid && hasOpen && 'bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/40',

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { Shortcut } from '@/lib/types'
+import { Shortcut, ExpenseStatus } from '@/lib/types'
 
 export async function getShortcuts(): Promise<Shortcut[]> {
   const supabase = await createClient()
@@ -23,6 +23,7 @@ export async function createShortcut(input: {
   name: string
   category_id?: string | null
   expense_name_id?: string | null
+  status?: ExpenseStatus | null
 }): Promise<Shortcut> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -54,6 +55,7 @@ export async function updateShortcut(id: string, input: {
   name?: string
   category_id?: string | null
   expense_name_id?: string | null
+  status?: ExpenseStatus | null
 }): Promise<void> {
   const supabase = await createClient()
   const { error } = await supabase

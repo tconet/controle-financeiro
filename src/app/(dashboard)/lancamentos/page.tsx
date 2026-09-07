@@ -18,14 +18,20 @@ export default function LancamentosPage() {
 
   const paramMonth = searchParams.get('month')
   const paramYear = searchParams.get('year')
-  const [month, setMonth] = useState(paramMonth ? Number(paramMonth) : now.getMonth() + 1)
-  const [year, setYear] = useState(paramYear ? Number(paramYear) : now.getFullYear())
+  // Data vinda do clique num dia do calendário (popup "Novo Lançamento")
+  const paramDate = searchParams.get('date')
+  const [month, setMonth] = useState(
+    paramMonth ? Number(paramMonth) : paramDate ? Number(paramDate.split('-')[1]) : now.getMonth() + 1
+  )
+  const [year, setYear] = useState(
+    paramYear ? Number(paramYear) : paramDate ? Number(paramDate.split('-')[0]) : now.getFullYear()
+  )
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | 'todos'>('todos')
   const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') ?? 'todos')
   const [expenseNameFilter, setExpenseNameFilter] = useState<string>('todos')
   const today = now.toISOString().split('T')[0]
-  const [dateFrom, setDateFrom] = useState<string>(searchParams.get('dateFrom') ?? today)
-  const [dateTo, setDateTo] = useState<string>(searchParams.get('dateTo') ?? today)
+  const [dateFrom, setDateFrom] = useState<string>(searchParams.get('dateFrom') ?? paramDate ?? today)
+  const [dateTo, setDateTo] = useState<string>(searchParams.get('dateTo') ?? paramDate ?? today)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [expenseNames, setExpenseNames] = useState<ExpenseName[]>([])
@@ -89,7 +95,8 @@ export default function LancamentosPage() {
       searchParams.get('dateFrom') ||
       searchParams.get('dateTo') ||
       searchParams.get('month') ||
-      searchParams.get('year')
+      searchParams.get('year') ||
+      searchParams.get('date')
     ) {
       router.replace('/lancamentos', { scroll: false })
     }
@@ -263,10 +270,10 @@ export default function LancamentosPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 max-w-[160px]">
+                          <td className="px-4 py-3 max-w-[240px]">
                             <p className="font-medium text-gray-900 dark:text-white truncate">{expName}</p>
                             {exp.description && (
-                              <p className="text-xs text-gray-400 truncate">{exp.description}</p>
+                              <p className="text-xs text-gray-400 whitespace-pre-wrap break-words">{exp.description}</p>
                             )}
                           </td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs hidden lg:table-cell truncate max-w-[120px]">{catName}</td>
@@ -326,6 +333,7 @@ export default function LancamentosPage() {
             shortcuts={shortcuts}
             editExpense={editExpense}
             initialShortcut={initialShortcut}
+            initialDueDate={paramDate}
             onInitialShortcutApplied={() => setInitialShortcut(null)}
             onSuccess={loadData}
             onCancelEdit={() => setEditExpense(null)}

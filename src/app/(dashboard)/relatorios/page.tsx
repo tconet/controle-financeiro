@@ -7,6 +7,7 @@ import { formatCurrency, MONTHS } from '@/lib/utils'
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,6 +19,7 @@ import {
 export default function RelatoriosPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(0) // 0 = todos os meses
   const [suppliers, setSuppliers] = useState<SupplierReport[]>([])
   const [loading, setLoading] = useState(true)
   const [topN, setTopN] = useState(10)
@@ -25,12 +27,12 @@ export default function RelatoriosPage() {
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const data = await getSupplierReport({ year })
+      const data = await getSupplierReport({ year, month: month || undefined })
       setSuppliers(data)
       setLoading(false)
     }
     load()
-  }, [year])
+  }, [year, month])
 
   // Preparar dados do gráfico de barras mensal
   const top = suppliers.slice(0, topN)
@@ -51,6 +53,14 @@ export default function RelatoriosPage() {
   ]
 
   const totalGeral = suppliers.reduce((s, r) => s + r.total, 0)
+  const periodLabel = month ? `${MONTHS[month - 1]}/${year}` : String(year)
+
+  // Dados do gráfico de ranking mensal (quando um mês específico está selecionado)
+  const monthRankingData = top.map((s, idx) => ({
+    name: s.expense_name,
+    total: s.total,
+    color: COLORS[idx % COLORS.length],
+  }))
 
   if (loading) {
     return (
@@ -74,6 +84,19 @@ export default function RelatoriosPage() {
           />
         </div>
         <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600 dark:text-gray-400">Mês</label>
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value={0}>Todos os meses</option>
+            {MONTHS.map((m, idx) => (
+              <option key={m} value={idx + 1}>{m}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600 dark:text-gray-400">Exibir top</label>
           <select
             value={topN}
@@ -84,7 +107,7 @@ export default function RelatoriosPage() {
           </select>
         </div>
         <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
-          Total pago em {year}: <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(totalGeral)}</span>
+          Total pago em {periodLabel}: <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(totalGeral)}</span>
         </span>
       </div>
 
@@ -94,7 +117,7 @@ export default function RelatoriosPage() {
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Ranking por Fornecedor/Despesa</h3>
         </div>
         {suppliers.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm">Nenhum pagamento registrado em {year}</div>
+          <div className="text-center py-16 text-gray-400 text-sm">Nenhum pagamento registrado em {periodLabel}</div>
         ) : (
           <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {suppliers.slice(0, topN).map((s, idx) => {
@@ -125,37 +148,65 @@ export default function RelatoriosPage() {
         )}
       </div>
 
-      {/* Gráfico mensal */}
+      {/* Gráfico: evolução mensal (ano inteiro) ou ranking do mês (mês específico) */}
       {top.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-5">
-            Evolução Mensal {year}
+            {month ? `Ranking do Mês — ${periodLabel}` : `Evolução Mensal ${year}`}
           </h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value: number, name: string) => [formatCurrency(value), name]}
-                contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg, #fff)',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
-              {top.map((s, idx) => (
-                <Bar
-                  key={s.expense_name}
-                  dataKey={s.expense_name}
-                  stackId="a"
-                  fill={COLORS[idx % COLORS.length]}
+          {month ? (
+            <ResponsiveContainer width="100%" height={Math.max(240, monthRankingData.length * 40)}>
+              <BarChart
+                data={monthRankingData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value: number) => [formatCurrency(value), 'Total']}
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #fff)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                  }}
                 />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
+                <Bar dataKey="total">
+                  {monthRankingData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value: number, name: string) => [formatCurrency(value), name]}
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #fff)',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                {top.map((s, idx) => (
+                  <Bar
+                    key={s.expense_name}
+                    dataKey={s.expense_name}
+                    stackId="a"
+                    fill={COLORS[idx % COLORS.length]}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
     </div>

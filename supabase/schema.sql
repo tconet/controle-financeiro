@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS shortcuts (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- Pré-preenchimento opcional do status do lançamento ao usar o atalho
+ALTER TABLE shortcuts ADD COLUMN IF NOT EXISTS status TEXT CHECK (status IN ('aberto', 'agendado', 'pago'));
+
 -- Lançamentos recorrentes (despesas que se repetem mensalmente)
 CREATE TABLE IF NOT EXISTS recurring_expenses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

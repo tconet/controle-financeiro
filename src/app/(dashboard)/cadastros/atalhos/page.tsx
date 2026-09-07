@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Shortcut, Category, ExpenseName } from '@/lib/types'
+import { Shortcut, Category, ExpenseName, ExpenseStatus } from '@/lib/types'
 import { getShortcuts, createShortcut, deleteShortcut } from '@/app/actions/shortcuts'
 import { getCategories } from '@/app/actions/categories'
 import { getExpenseNames } from '@/app/actions/expense-names'
+import { STATUS_LABELS } from '@/lib/utils'
 import { ArrowLeft, Plus, Trash2, Loader2, Zap } from 'lucide-react'
 import Link from 'next/link'
 
@@ -18,6 +19,7 @@ export default function AtalhosPage() {
   const [newName, setNewName] = useState('')
   const [newCategoryId, setNewCategoryId] = useState('')
   const [newExpenseNameId, setNewExpenseNameId] = useState('')
+  const [newStatus, setNewStatus] = useState<ExpenseStatus | ''>('')
 
   async function load() {
     const [s, c, e] = await Promise.all([getShortcuts(), getCategories(), getExpenseNames()])
@@ -37,10 +39,12 @@ export default function AtalhosPage() {
         name: newName,
         category_id: newCategoryId || null,
         expense_name_id: newExpenseNameId || null,
+        status: newStatus || null,
       })
       setNewName('')
       setNewCategoryId('')
       setNewExpenseNameId('')
+      setNewStatus('')
       load()
     })
   }
@@ -100,6 +104,19 @@ export default function AtalhosPage() {
               {expenseNames.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
           </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Pré-preencher Status</label>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value as ExpenseStatus | '')}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Nenhum</option>
+              {(['aberto', 'agendado', 'pago'] as ExpenseStatus[]).map((s) => (
+                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <button
           type="submit"
@@ -123,6 +140,12 @@ export default function AtalhosPage() {
           {shortcuts.map((s) => {
             const catName = (s.categories as { name: string } | null)?.name
             const expName = (s.expense_names as { name: string } | null)?.name
+            const statusName = s.status ? STATUS_LABELS[s.status] : undefined
+            const parts = [
+              catName ? `Categoria: ${catName}` : null,
+              expName ? `Despesa: ${expName}` : null,
+              statusName ? `Status: ${statusName}` : null,
+            ].filter(Boolean)
             return (
               <div key={s.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 group">
                 <div className="bg-blue-50 dark:bg-blue-950/40 rounded-lg p-1.5">
@@ -131,10 +154,7 @@ export default function AtalhosPage() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{s.name}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {catName ? `Categoria: ${catName}` : ''}
-                    {catName && expName ? ' · ' : ''}
-                    {expName ? `Despesa: ${expName}` : ''}
-                    {!catName && !expName ? 'Sem pré-preenchimento' : ''}
+                    {parts.length > 0 ? parts.join(' · ') : 'Sem pré-preenchimento'}
                   </p>
                 </div>
                 <button

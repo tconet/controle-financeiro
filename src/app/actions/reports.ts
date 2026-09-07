@@ -112,6 +112,7 @@ export async function getDREData(month: number, year: number): Promise<DREData> 
 export async function getSupplierReport(filters?: {
   months?: number
   year?: number
+  month?: number
 }): Promise<SupplierReport[]> {
   const supabase = await createClient()
 
@@ -121,7 +122,11 @@ export async function getSupplierReport(filters?: {
     .eq('status', 'pago')
     .order('due_date')
 
-  if (filters?.year) {
+  if (filters?.year && filters?.month) {
+    const startDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`
+    const endDate = new Date(filters.year, filters.month, 0).toISOString().split('T')[0]
+    query = query.gte('due_date', startDate).lte('due_date', endDate)
+  } else if (filters?.year) {
     const startDate = `${filters.year}-01-01`
     const endDate = `${filters.year}-12-31`
     query = query.gte('due_date', startDate).lte('due_date', endDate)

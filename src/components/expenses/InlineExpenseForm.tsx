@@ -11,6 +11,7 @@ interface InlineExpenseFormProps {
   shortcuts?: Shortcut[]
   editExpense?: Expense | null
   initialShortcut?: Shortcut | null
+  initialDueDate?: string | null
   onInitialShortcutApplied?: () => void
   onSuccess: () => void
   onCancelEdit?: () => void
@@ -30,6 +31,7 @@ export function InlineExpenseForm({
   shortcuts = [],
   editExpense,
   initialShortcut,
+  initialDueDate,
   onInitialShortcutApplied,
   onSuccess,
   onCancelEdit,
@@ -44,7 +46,7 @@ export function InlineExpenseForm({
   const [categoryId, setCategoryId] = useState(EMPTY.categoryId)
   const [expenseNameId, setExpenseNameId] = useState(EMPTY.expenseNameId)
   const [amount, setAmount] = useState(EMPTY.amount)
-  const [dueDate, setDueDate] = useState(EMPTY.dueDate)
+  const [dueDate, setDueDate] = useState(initialDueDate || EMPTY.dueDate)
   const [description, setDescription] = useState(EMPTY.description)
   const [status, setStatus] = useState<ExpenseStatus>(EMPTY.status)
   const [isRecurring, setIsRecurring] = useState(EMPTY.isRecurring)
@@ -94,7 +96,7 @@ export function InlineExpenseForm({
     setCategoryId(EMPTY.categoryId)
     setExpenseNameId(EMPTY.expenseNameId)
     setAmount(EMPTY.amount)
-    setDueDate(new Date().toISOString().split('T')[0])
+    setDueDate(initialDueDate || new Date().toISOString().split('T')[0])
     setDescription(EMPTY.description)
     setStatus(EMPTY.status)
     setIsRecurring(EMPTY.isRecurring)
@@ -104,6 +106,7 @@ export function InlineExpenseForm({
   function applyShortcut(shortcut: Shortcut) {
     if (shortcut.category_id) setCategoryId(shortcut.category_id)
     if (shortcut.expense_name_id) setExpenseNameId(shortcut.expense_name_id)
+    if (shortcut.status) setStatus(shortcut.status)
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -271,12 +274,12 @@ export function InlineExpenseForm({
         {/* Descrição */}
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descrição (opcional)</label>
-          <input
-            type="text"
+          <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Observações..."
-            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={3}
+            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
           />
         </div>
 

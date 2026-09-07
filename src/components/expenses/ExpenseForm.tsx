@@ -255,12 +255,12 @@ export function ExpenseForm({
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Descrição (opcional)
               </label>
-              <input
-                type="text"
+              <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Observações sobre este lançamento..."
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
               />
             </div>
 

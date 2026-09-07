@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Expense, ExpenseStatus } from '@/lib/types'
 import { updateExpenseStatus, updateMultipleExpenseStatus } from '@/app/actions/expenses'
 import { formatCurrency, formatDate, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DayModalProps {
@@ -15,6 +16,7 @@ interface DayModalProps {
 }
 
 export function DayModal({ date, expenses, onClose, onUpdate }: DayModalProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -153,12 +155,19 @@ export function DayModal({ date, expenses, onClose, onUpdate }: DayModalProps) {
           })}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-2">
           <button
             onClick={onClose}
-            className="w-full py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="flex-1 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Fechar
+          </button>
+          <button
+            onClick={() => router.push(`/lancamentos?date=${date}`)}
+            className="flex-1 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={14} />
+            Novo Lançamento
           </button>
         </div>
       </div>
